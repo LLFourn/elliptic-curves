@@ -33,10 +33,11 @@ impl ProjectiveArithmetic for Secp256k1 {
 /// A point on the secp256k1 curve in projective coordinates.
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(docsrs, doc(cfg(feature = "arithmetic")))]
+#[allow(missing_docs)]
 pub struct ProjectivePoint {
-    x: FieldElement,
-    y: FieldElement,
-    z: FieldElement,
+    pub x: FieldElement,
+    pub y: FieldElement,
+    pub z: FieldElement,
 }
 
 impl From<AffinePoint> for ProjectivePoint {

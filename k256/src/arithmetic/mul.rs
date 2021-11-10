@@ -222,7 +222,6 @@ fn static_zip_map<T: Copy, S: Copy, V: Copy, const N: usize>(
 }
 
 /// Calculates a linear combination `sum(x[i] * k[i])`, `i = 0..N`
-#[inline(always)]
 fn lincomb_generic<const N: usize>(xs: &[ProjectivePoint; N], ks: &[Scalar; N]) -> ProjectivePoint {
     let rs = static_map(
         |k| decompose_scalar(&k),
@@ -299,6 +298,7 @@ fn mul(x: &ProjectivePoint, k: &Scalar) -> ProjectivePoint {
 }
 
 /// Calculates `x * k + y * l`.
+#[inline(always)]
 pub fn lincomb(
     x: &ProjectivePoint,
     k: &Scalar,

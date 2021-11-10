@@ -74,7 +74,7 @@ impl FieldElement {
 
     /// Attempts to parse the given byte array as an SEC1-encoded field element.
     /// Does not check the result for being in the correct range.
-    pub(crate) const fn from_bytes_unchecked(bytes: &[u8; 32]) -> Self {
+    pub const fn from_bytes_unchecked(bytes: &[u8; 32]) -> Self {
         Self(FieldElementImpl::from_bytes_unchecked(bytes))
     }
 

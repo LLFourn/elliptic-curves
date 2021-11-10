@@ -1,83 +1,30 @@
 [package]
-name = "k256"
+name = "secp256kfun_k256_backend"
 description = """
-secp256k1 elliptic curve library written in pure Rust with support for ECDSA
-signing/verification (including Ethereum-style signatures with public-key
-recovery), Elliptic Curve Diffie-Hellman (ECDH), and general purpose secp256k1
-curve arithmetic useful for implementing arbitrary group-based protocols.
+backend for secp256kfun based on k256
 """
-version = "0.9.6" # Also update html_root_url in lib.rs when bumping this
-authors = ["RustCrypto Developers"]
+version = "0.9.6" # track the RustCrypto Version
+authors = ["LLFourn <lloyd.fourn@gmail.com>"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/elliptic-curve"
 repository = "https://github.com/RustCrypto/elliptic-curves/tree/master/k256"
 readme = "README.md"
 edition = "2018"
 categories = ["cryptography", "cryptography::cryptocurrencies", "no-std"]
-keywords = ["bitcoin", "crypto", "ecc", "ethereum", "secp256k1"]
+keywords = ["bitcoin", "crypto", "ecc", "secp256k1"]
 
 [dependencies]
 cfg-if = "1.0"
-elliptic-curve = { version = "0.10.5", default-features = false, features = ["hazmat"] }
-
-# optional dependencies
-hex-literal = { version = "0.3", optional = true }
-sha2 = { version = "0.9", optional = true, default-features = false }
-sha3 = { version = "0.9", optional = true, default-features = false }
-
-[dependencies.ecdsa-core]
-version = "0.12.1"
-package = "ecdsa"
-optional = true
-default-features = false
-features = ["der"]
+elliptic-curve = { version = "0.10.6", default-features = false, features = ["hazmat"] }
 
 [dev-dependencies]
-blobby = "0.3"
-criterion = "0.3"
-ecdsa-core = { version = "0.12.1", package = "ecdsa", default-features = false, features = ["dev"] }
 hex-literal = "0.3"
+rand_core = { version = "0.6", features = ["getrandom"] }
 num-bigint = "0.4"
 num-traits = "0.2"
 proptest = "1.0"
-rand_core = { version = "0.6", features = ["getrandom"] }
 
 [features]
-default = ["arithmetic", "ecdsa", "pkcs8", "sha256", "std"]
+default = ["arithmetic"]
 arithmetic = ["elliptic-curve/arithmetic"]
-bits = ["arithmetic", "elliptic-curve/bits"]
-digest = ["ecdsa-core/digest", "ecdsa-core/hazmat"]
-ecdh = ["arithmetic", "elliptic-curve/ecdh", "zeroize"]
-ecdsa = ["arithmetic", "digest", "ecdsa-core/sign", "ecdsa-core/verify", "zeroize"]
 expose-field = ["arithmetic"]
-field-montgomery = []
-force-32-bit = []
-jwk = ["elliptic-curve/jwk"]
-keccak256 = ["digest", "sha3"]
-pem = ["elliptic-curve/pem", "pkcs8"]
-pkcs8 = ["elliptic-curve/pkcs8", "zeroize"]
-sha256 = ["digest", "sha2"]
-test-vectors = ["hex-literal"]
-std = ["ecdsa-core/std", "elliptic-curve/std"] # TODO: use weak activation for `ecdsa-core/std` when available
-zeroize = ["elliptic-curve/zeroize"]
-
-[package.metadata.docs.rs]
-features = ["ecdh", "ecdsa", "sha256", "keccak256"]
-rustdoc-args = ["--cfg", "docsrs"]
-
-[[bench]]
-name = "ecdsa"
-path = "bench/ecdsa.rs"
-harness = false
-required-features = ["ecdsa", "sha256"]
-
-[[bench]]
-name = "field"
-path = "bench/field.rs"
-harness = false
-required-features = ["expose-field"]
-
-[[bench]]
-name = "scalar"
-path = "bench/scalar.rs"
-harness = false
