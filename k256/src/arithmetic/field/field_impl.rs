@@ -4,7 +4,7 @@
 
 use crate::FieldBytes;
 use cfg_if::cfg_if;
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;

@@ -67,7 +67,7 @@
 
 use crate::arithmetic::{scalar::Scalar, ProjectivePoint};
 use core::ops::{Mul, MulAssign};
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 
 /// Lookup table containing precomputed values `[p, 2p, 3p, ..., 8p]`
 #[derive(Copy, Clone, Default)]
@@ -341,25 +341,5 @@ impl MulAssign<Scalar> for ProjectivePoint {
 impl MulAssign<&Scalar> for ProjectivePoint {
     fn mul_assign(&mut self, rhs: &Scalar) {
         *self = mul(self, rhs);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::lincomb;
-    use crate::arithmetic::{ProjectivePoint, Scalar};
-    use elliptic_curve::rand_core::OsRng;
-    use elliptic_curve::{Field, Group};
-
-    #[test]
-    fn test_lincomb() {
-        let x = ProjectivePoint::random(&mut OsRng);
-        let y = ProjectivePoint::random(&mut OsRng);
-        let k = Scalar::random(&mut OsRng);
-        let l = Scalar::random(&mut OsRng);
-
-        let reference = &x * &k + &y * &l;
-        let test = lincomb(&x, &k, &y, &l);
-        assert_eq!(reference, test);
     }
 }

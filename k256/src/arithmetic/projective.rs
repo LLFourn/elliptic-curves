@@ -1,22 +1,11 @@
 //! Projective points
 
-use super::{AffinePoint, FieldElement, Scalar, CURVE_EQUATION_B_SINGLE};
-use crate::{CompressedPoint, EncodedPoint, Secp256k1};
+use super::{AffinePoint, FieldElement, CURVE_EQUATION_B_SINGLE};
 use core::{
     iter::Sum,
     ops::{Add, AddAssign, Neg, Sub, SubAssign},
 };
-use elliptic_curve::{
-    group::{
-        ff::Field,
-        prime::{PrimeCurve, PrimeCurveAffine, PrimeGroup},
-        Curve, Group, GroupEncoding,
-    },
-    rand_core::RngCore,
-    sec1::{FromEncodedPoint, ToEncodedPoint},
-    subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption},
-    ProjectiveArithmetic,
-};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 
 #[rustfmt::skip]
 const ENDOMORPHISM_BETA: FieldElement = FieldElement::from_bytes_unchecked(&[
@@ -25,10 +14,6 @@ const ENDOMORPHISM_BETA: FieldElement = FieldElement::from_bytes_unchecked(&[
     0x9c, 0xf0, 0x49, 0x75, 0x12, 0xf5, 0x89, 0x95,
     0xc1, 0x39, 0x6c, 0x28, 0x71, 0x95, 0x01, 0xee,
 ]);
-
-impl ProjectiveArithmetic for Secp256k1 {
-    type ProjectivePoint = ProjectivePoint;
-}
 
 /// A point on the secp256k1 curve in projective coordinates.
 #[derive(Clone, Copy, Debug)]
@@ -54,18 +39,6 @@ impl From<AffinePoint> for ProjectivePoint {
 impl From<ProjectivePoint> for AffinePoint {
     fn from(p: ProjectivePoint) -> AffinePoint {
         p.to_affine()
-    }
-}
-
-impl FromEncodedPoint<Secp256k1> for ProjectivePoint {
-    fn from_encoded_point(p: &EncodedPoint) -> Option<Self> {
-        AffinePoint::from_encoded_point(p).map(ProjectivePoint::from)
-    }
-}
-
-impl ToEncodedPoint<Secp256k1> for ProjectivePoint {
-    fn to_encoded_point(&self, compress: bool) -> EncodedPoint {
-        self.to_affine().to_encoded_point(compress)
     }
 }
 
@@ -102,11 +75,6 @@ impl ProjectivePoint {
             y: FieldElement::one(),
             z: FieldElement::zero(),
         }
-    }
-
-    /// Returns the base point of SECP256k1.
-    pub fn generator() -> ProjectivePoint {
-        AffinePoint::generator().into()
     }
 
     /// Returns the affine representation of this point, or `None` if it is the identity.
@@ -265,60 +233,11 @@ impl ProjectivePoint {
     }
 }
 
-impl Group for ProjectivePoint {
-    type Scalar = Scalar;
-
-    fn random(mut rng: impl RngCore) -> Self {
-        Self::generator() * Scalar::random(&mut rng)
-    }
-
-    fn identity() -> Self {
-        ProjectivePoint::identity()
-    }
-
-    fn generator() -> Self {
-        ProjectivePoint::generator()
-    }
-
-    fn is_identity(&self) -> Choice {
+impl ProjectivePoint {
+    /// is it identity
+    pub fn is_identity(&self) -> Choice {
         self.ct_eq(&Self::identity())
     }
-
-    #[must_use]
-    fn double(&self) -> Self {
-        ProjectivePoint::double(self)
-    }
-}
-
-impl GroupEncoding for ProjectivePoint {
-    type Repr = CompressedPoint;
-
-    fn from_bytes(bytes: &Self::Repr) -> CtOption<Self> {
-        <AffinePoint as GroupEncoding>::from_bytes(bytes).map(|point| point.into())
-    }
-
-    fn from_bytes_unchecked(bytes: &Self::Repr) -> CtOption<Self> {
-        // No unchecked conversion possible for compressed points
-        Self::from_bytes(bytes)
-    }
-
-    fn to_bytes(&self) -> Self::Repr {
-        CompressedPoint::clone_from_slice(self.to_affine().to_encoded_point(true).as_bytes())
-    }
-}
-
-impl PrimeGroup for ProjectivePoint {}
-
-impl Curve for ProjectivePoint {
-    type AffineRepr = AffinePoint;
-
-    fn to_affine(&self) -> AffinePoint {
-        ProjectivePoint::to_affine(self)
-    }
-}
-
-impl PrimeCurve for ProjectivePoint {
-    type Affine = AffinePoint;
 }
 
 impl Default for ProjectivePoint {

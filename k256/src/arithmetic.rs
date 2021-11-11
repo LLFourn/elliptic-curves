@@ -12,7 +12,6 @@ pub use mul::lincomb;
 
 use affine::AffinePoint;
 use projective::ProjectivePoint;
-use scalar::Scalar;
 
 const CURVE_EQUATION_B_SINGLE: u32 = 7u32;
 
@@ -37,14 +36,4 @@ mod tests {
         assert_eq!(CURVE_EQUATION_B.to_bytes(), CURVE_EQUATION_B_BYTES.into());
     }
 
-    #[test]
-    #[cfg(feature = "zeroize")]
-    fn generate_secret_key() {
-        use crate::SecretKey;
-        use elliptic_curve::rand_core::OsRng;
-        let key = SecretKey::random(&mut OsRng);
-
-        // Sanity check
-        assert!(!key.to_bytes().iter().all(|b| *b == 0))
-    }
 }

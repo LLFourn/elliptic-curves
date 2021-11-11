@@ -3,7 +3,7 @@ name = "secp256kfun_k256_backend"
 description = """
 backend for secp256kfun based on k256
 """
-version = "0.9.6" # track the RustCrypto Version
+version = "1.0.0" # tracking rust crypto 0.9.6
 authors = ["LLFourn <lloyd.fourn@gmail.com>"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/elliptic-curve"
@@ -15,16 +15,19 @@ keywords = ["bitcoin", "crypto", "ecc", "secp256k1"]
 
 [dependencies]
 cfg-if = "1.0"
-elliptic-curve = { version = "0.10.6", default-features = false, features = ["hazmat"] }
+subtle = { package = "subtle-ng", version = "2" }
+generic-array = "0.14"
 
 [dev-dependencies]
+elliptic-curve = { version = "0.10.6", default-features = false, features = ["hazmat"] }
 hex-literal = "0.3"
 rand_core = { version = "0.6", features = ["getrandom"] }
 num-bigint = "0.4"
 num-traits = "0.2"
 proptest = "1.0"
 
+
 [features]
 default = ["arithmetic"]
-arithmetic = ["elliptic-curve/arithmetic"]
+arithmetic = []
 expose-field = ["arithmetic"]

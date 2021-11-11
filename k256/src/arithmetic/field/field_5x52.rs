@@ -2,10 +2,7 @@
 //! Ported from https://github.com/bitcoin-core/secp256k1
 
 use crate::FieldBytes;
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
-
-#[cfg(feature = "zeroize")]
-use elliptic_curve::zeroize::Zeroize;
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 /// Scalars modulo SECP256k1 modulus (2^256 - 2^32 - 2^9 - 2^8 - 2^7 - 2^6 - 2^4 - 1).
 /// Uses 5 64-bit limbs (little-endian), where in the normalized form

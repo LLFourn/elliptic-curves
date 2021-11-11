@@ -6,29 +6,20 @@ cfg_if! {
     if #[cfg(any(target_pointer_width = "32", feature = "force-32-bit"))] {
         mod scalar_8x32;
         use scalar_8x32::Scalar8x32 as ScalarImpl;
-        use scalar_8x32::WideScalar16x32 as WideScalarImpl;
 
         #[cfg(feature = "bits")]
         use scalar_8x32::MODULUS;
     } else if #[cfg(target_pointer_width = "64")] {
         mod scalar_4x64;
         use scalar_4x64::Scalar4x64 as ScalarImpl;
-        use scalar_4x64::WideScalar8x64 as WideScalarImpl;
-
         #[cfg(feature = "bits")]
         use scalar_4x64::MODULUS;
     }
 }
 
-use crate::{FieldBytes, Secp256k1};
+use crate::FieldBytes;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Shr, Sub, SubAssign};
-use elliptic_curve::{
-    generic_array::arr,
-    group::ff::{Field, PrimeField},
-    rand_core::{CryptoRng, RngCore},
-    subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption},
-    ScalarArithmetic,
-};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "bits")]
 use {crate::ScalarBits, elliptic_curve::group::ff::PrimeFieldBits};
@@ -41,10 +32,6 @@ use elliptic_curve::zeroize::Zeroize;
 
 #[cfg(test)]
 use num_bigint::{BigUint, ToBigUint};
-
-impl ScalarArithmetic for Secp256k1 {
-    type Scalar = Scalar;
-}
 
 /// Scalars are elements in the finite field modulo n.
 ///
@@ -73,86 +60,37 @@ impl ScalarArithmetic for Secp256k1 {
 #[cfg_attr(docsrs, doc(cfg(feature = "arithmetic")))]
 pub struct Scalar(ScalarImpl);
 
-impl Field for Scalar {
-    fn random(rng: impl RngCore) -> Self {
-        // Uses rejection sampling as the default random generation method,
-        // which produces a uniformly random distribution of scalars.
-        //
-        // This method is not constant time, but should be secure so long as
-        // rejected RNG outputs are unrelated to future ones (which is a
-        // necessary property of a `CryptoRng`).
-        //
-        // With an unbiased RNG, the probability of failing to complete after 4
-        // iterations is vanishingly small.
-        Self::generate_vartime(rng)
-    }
-
-    fn zero() -> Self {
-        Scalar::zero()
-    }
-
-    fn one() -> Self {
-        Scalar::one()
-    }
-
-    fn is_zero(&self) -> bool {
-        self.0.is_zero().into()
-    }
-
+impl Scalar {
     #[must_use]
-    fn square(&self) -> Self {
-        Scalar::square(self)
-    }
-
-    #[must_use]
-    fn double(&self) -> Self {
+    pub fn double(&self) -> Self {
         self.add(self)
     }
 
-    fn invert(&self) -> CtOption<Self> {
-        Scalar::invert(self)
-    }
-
     // TODO(tarcieri): stub! See: https://github.com/RustCrypto/elliptic-curves/issues/170
-    fn sqrt(&self) -> CtOption<Self> {
+    pub fn sqrt(&self) -> CtOption<Self> {
         todo!("see RustCrypto/elliptic-curves#170");
     }
 }
 
-impl PrimeField for Scalar {
-    type Repr = FieldBytes;
-
-    const NUM_BITS: u32 = 256;
-    const CAPACITY: u32 = 255;
-    const S: u32 = 6;
-
+impl Scalar {
     /// Attempts to parse the given byte array as an SEC1-encoded scalar.
     ///
     /// Returns None if the byte array does not contain a big-endian integer in the range
     /// [0, p).
-    fn from_repr(bytes: FieldBytes) -> Option<Self> {
+    pub fn from_repr(bytes: FieldBytes) -> Option<Self> {
         ScalarImpl::from_bytes(bytes.as_ref()).map(Self).into()
     }
 
-    fn to_repr(&self) -> FieldBytes {
+    pub fn to_repr(&self) -> FieldBytes {
         self.to_bytes()
     }
 
-    fn is_odd(&self) -> bool {
+    pub fn is_odd(&self) -> bool {
         self.0.is_odd().into()
     }
 
-    fn multiplicative_generator() -> Self {
+    pub fn multiplicative_generator() -> Self {
         7u64.into()
-    }
-
-    fn root_of_unity() -> Self {
-        Scalar::from_repr(arr![u8;
-            0xc1, 0xdc, 0x06, 0x0e, 0x7a, 0x91, 0x98, 0x6d, 0xf9, 0x87, 0x9a, 0x3f, 0xbc, 0x48,
-            0x3a, 0x89, 0x8b, 0xde, 0xab, 0x68, 0x07, 0x56, 0x04, 0x59, 0x92, 0xf4, 0xb5, 0x40,
-            0x2b, 0x05, 0x2f, 0x2,
-        ])
-        .unwrap()
     }
 }
 
@@ -327,29 +265,6 @@ impl Scalar {
     #[cfg(test)]
     pub fn modulus_as_biguint() -> BigUint {
         Self::one().negate().to_biguint().unwrap() + 1.to_biguint().unwrap()
-    }
-
-    /// Returns a (nearly) uniformly-random scalar, generated in constant time.
-    pub fn generate_biased(mut rng: impl CryptoRng + RngCore) -> Self {
-        // We reduce a random 512-bit value into a 256-bit field, which results in a
-        // negligible bias from the uniform distribution, but the process is constant-time.
-        let mut buf = [0u8; 64];
-        rng.fill_bytes(&mut buf);
-        Scalar(WideScalarImpl::from_bytes(&buf).reduce())
-    }
-
-    /// Returns a uniformly-random scalar, generated using rejection sampling.
-    // TODO(tarcieri): make this a `CryptoRng` when `ff` allows it
-    pub fn generate_vartime(mut rng: impl RngCore) -> Self {
-        let mut bytes = FieldBytes::default();
-
-        // TODO: pre-generate several scalars to bring the probability of non-constant-timeness down?
-        loop {
-            rng.fill_bytes(&mut bytes);
-            if let Some(scalar) = Scalar::from_repr(bytes) {
-                return scalar;
-            }
-        }
     }
 
     /// If `flag` evaluates to `true`, adds `(1 << bit)` to `self`.

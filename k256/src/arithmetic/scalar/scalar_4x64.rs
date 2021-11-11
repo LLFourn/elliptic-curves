@@ -6,7 +6,7 @@ use crate::{
     FieldBytes,
 };
 use core::convert::TryInto;
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;
@@ -475,6 +475,7 @@ impl From<Scalar4x64> for crate::ScalarBits {
 pub struct WideScalar8x64([u64; 8]);
 
 impl WideScalar8x64 {
+    #[allow(dead_code)]
     pub fn from_bytes(bytes: &[u8; 64]) -> Self {
         let mut w = [0u64; 8];
         for i in 0..8 {

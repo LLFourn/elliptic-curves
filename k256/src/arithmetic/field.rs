@@ -31,7 +31,7 @@ cfg_if! {
 
 use crate::FieldBytes;
 use core::ops::{Add, AddAssign, Mul, MulAssign};
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;
