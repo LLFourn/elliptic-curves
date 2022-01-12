@@ -28,6 +28,5 @@ proptest = "1.0"
 
 
 [features]
-default = ["arithmetic"]
-arithmetic = []
-expose-field = ["arithmetic"]
+default = ["alloc"]
+alloc = []

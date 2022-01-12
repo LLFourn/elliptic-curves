@@ -222,7 +222,7 @@ fn static_zip_map<T: Copy, S: Copy, V: Copy, const N: usize>(
 }
 
 /// Calculates a linear combination `sum(x[i] * k[i])`, `i = 0..N`
-fn lincomb_generic<const N: usize>(xs: &[ProjectivePoint; N], ks: &[Scalar; N]) -> ProjectivePoint {
+pub fn lincomb_generic<const N: usize>(xs: &[ProjectivePoint; N], ks: &[Scalar; N]) -> ProjectivePoint {
     let rs = static_map(
         |k| decompose_scalar(&k),
         ks,
@@ -273,8 +273,8 @@ fn lincomb_generic<const N: usize>(xs: &[ProjectivePoint; N], ks: &[Scalar; N]) 
         Radix16Decomposition::default(),
     );
 
-    let mut acc = ProjectivePoint::identity();
-    for component in 0..N {
+    let mut acc = &tables1[0].select(digits1[0].0[32]) + &tables2[0].select(digits2[0].0[32]);
+    for component in 1..N {
         acc += &tables1[component].select(digits1[component].0[32]);
         acc += &tables2[component].select(digits2[component].0[32]);
     }
@@ -342,4 +342,54 @@ impl MulAssign<&Scalar> for ProjectivePoint {
     fn mul_assign(&mut self, rhs: &Scalar) {
         *self = mul(self, rhs);
     }
+}
+
+
+// --- BEGIN LLFOURN's EXTERNSION
+
+/// Calculates a linear combination `sum(x[i] * k[i])`, `i = 0..N`
+#[cfg(feature = "alloc")]
+pub fn lincomb_iter<'a,'b>(xs: impl Iterator<Item=&'a ProjectivePoint>, ks: impl Iterator<Item=&'b Scalar>) -> ProjectivePoint {
+    use alloc::vec::Vec;
+    use subtle::ConditionallyNegatable;
+    let size = xs.size_hint().0;
+    let mut digits1 = Vec::with_capacity(size);
+    let mut digits2 = Vec::with_capacity(size);
+    let mut tables1 = Vec::with_capacity(size);
+    let mut tables2 = Vec::with_capacity(size);
+    let mut n = 0;
+
+    for (k,mut x) in ks.zip(xs.cloned()) {
+        let (mut r1, mut r2) = decompose_scalar(&k);
+        let mut x_beta = x.endomorphism();
+        let r1_is_high = r1.is_high();
+        let r2_is_high = r2.is_high();
+        r1.conditional_negate(r1_is_high);
+        r2.conditional_negate(r2_is_high);
+        x.conditional_negate(r1_is_high);
+        x_beta.conditional_negate(r2_is_high);
+        digits1.push(Radix16Decomposition::new(&r1));
+        digits2.push(Radix16Decomposition::new(&r2));
+        tables1.push(LookupTable::from(&x));
+        tables2.push(LookupTable::from(&x_beta));
+        n += 1;
+    }
+
+    let mut acc = &tables1[0].select(digits1[0].0[32]) + &tables2[0].select(digits2[0].0[32]);
+    for component in 1..n {
+        acc += &tables1[component].select(digits1[component].0[32]);
+        acc += &tables2[component].select(digits2[component].0[32]);
+    }
+
+    for i in (0..32).rev() {
+        for _j in 0..4 {
+            acc = acc.double();
+        }
+
+        for component in 0..n {
+            acc += &tables1[component].select(digits1[component].0[i]);
+            acc += &tables2[component].select(digits2[component].0[i]);
+        }
+    }
+    acc
 }

@@ -8,7 +8,7 @@ pub(crate) mod scalar;
 mod util;
 
 pub use field::FieldElement;
-pub use mul::lincomb;
+pub use mul::{lincomb, lincomb_iter};
 
 use affine::AffinePoint;
 use projective::ProjectivePoint;

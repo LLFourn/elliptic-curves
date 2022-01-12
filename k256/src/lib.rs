@@ -49,21 +49,21 @@
 #![forbid(unsafe_code)]
 #![warn(rust_2018_idioms, unused_qualifications)]
 
-#[cfg(feature = "arithmetic")]
 mod arithmetic;
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 #[cfg(any(feature = "test-vectors", test))]
 #[cfg_attr(docsrs, doc(cfg(feature = "test-vectors")))]
 pub mod test_vectors;
 
-#[cfg(feature = "arithmetic")]
-pub use arithmetic::{affine::AffinePoint, lincomb, projective::ProjectivePoint, scalar::Scalar};
+pub use arithmetic::{affine::AffinePoint, lincomb, lincomb_iter,projective::ProjectivePoint, scalar::Scalar};
 use generic_array::{
     typenum::{U32, U33},
     GenericArray,
 };
 
-#[cfg(feature = "expose-field")]
 pub use arithmetic::FieldElement;
 
 /// K-256 (secp256k1) elliptic curve.
