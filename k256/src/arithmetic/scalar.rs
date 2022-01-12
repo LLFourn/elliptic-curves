@@ -492,7 +492,6 @@ impl Zeroize for Scalar {
 mod tests {
     use super::Scalar;
     use crate::arithmetic::util::{biguint_to_bytes, bytes_to_biguint};
-    use elliptic_curve::group::ff::PrimeField;
     use num_bigint::{BigUint, ToBigUint};
     use proptest::prelude::*;
 
@@ -581,21 +580,6 @@ mod tests {
         assert_eq!(res, res_ref);
     }
 
-    #[test]
-    fn generate_biased() {
-        use elliptic_curve::rand_core::OsRng;
-        let a = Scalar::generate_biased(&mut OsRng);
-        // just to make sure `a` is not optimized out by the compiler
-        assert_eq!((a - &a).is_zero().unwrap_u8(), 1);
-    }
-
-    #[test]
-    fn generate_vartime() {
-        use elliptic_curve::rand_core::OsRng;
-        let a = Scalar::generate_vartime(&mut OsRng);
-        // just to make sure `a` is not optimized out by the compiler
-        assert_eq!((a - &a).is_zero().unwrap_u8(), 1);
-    }
 
     prop_compose! {
         fn scalar()(bytes in any::<[u8; 32]>()) -> Scalar {
