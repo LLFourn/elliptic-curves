@@ -6,7 +6,7 @@ use crate::{
     FieldBytes,
 };
 use core::convert::TryInto;
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;
