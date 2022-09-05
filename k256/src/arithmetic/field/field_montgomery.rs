@@ -4,7 +4,7 @@ use crate::{
     arithmetic::util::{adc64, mac64, mac64_typemax, sbb64},
     FieldBytes,
 };
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;

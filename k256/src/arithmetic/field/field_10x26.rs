@@ -2,7 +2,7 @@
 //! Ported from https://github.com/bitcoin-core/secp256k1
 
 use crate::FieldBytes;
-use elliptic_curve::subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "zeroize")]
 use elliptic_curve::zeroize::Zeroize;
